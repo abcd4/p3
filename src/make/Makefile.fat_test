@@ -1,0 +1,16 @@
+# Your code goes here:
+
+#//<<<<HW_MEASURE
+SRC = test/cache_test/tracedisk.c test/fat_test/ta_fatdisk.c src/block/checkdisk.c src/block/combinedisk.c src/block/partdisk.c src/block/raid1disk.c src/block/ramdisk.c src/block/statdisk.c src/block/treedisk.c src/block/fatdisk.c
+INCLUDE = -Isrc/block -Isrc/h
+CFLAGS = $(INCLUDE) -g -Wall -DHW_FS
+
+all: fstest
+
+fstest: test/fat_test/trace.c $(SRC)
+	$(CC) -o fstest $(CFLAGS) test/fat_test/trace.c $(SRC)
+
+#//>>>>HW_MEASURE
+clean:
+	rm -f *.o fstest
+	rm -rf fstest.dSYM/

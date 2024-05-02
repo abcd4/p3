@@ -216,4 +216,3 @@ There are some shortcuts for ranges as well:
 
     g:          all lines.  E.g. "gp" prints all lines.
     z:          the next 10 lines
-# p3

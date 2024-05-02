@@ -1,0 +1,337 @@
+: Create release script, e.g.,
+: cd $EGOS; $EGOS/src/tools/cr egos HW_MT HW_MLFQ HW_MEASURE HW_CLOCK HW_FS HW_PAGING HW_RAID
+
+release="$0 $*"
+case $# in
+0)
+	echo Usage $0 'name [keys ...]' >&2
+	exit 1
+	;;
+*)
+	name=$1
+	shift
+	;;
+esac
+
+mkdir -p releases
+if mkdir releases/$name
+then
+	echo creating release $name
+else
+	echo release $name already exists >&2
+	exit 1
+fi
+
+: preparation
+make clean
+make build/tools/cpr
+if test ! -f build/tools/cpr
+then
+	exit 1
+fi
+
+# : create a list of all directories and files
+# tar cvf /dev/null . 2>&1 |
+# 		grep -v '\.git' |
+# 		grep -v win32 |
+# 		grep -v build/tcc |
+# 		grep -v src/tcc |
+# 		grep -v docs/projects |
+# 		grep -v -e test.cache_test |
+# 		grep -v -e test.fat_test |
+# 		grep -v releases |
+# 		grep -v DS_Store |
+# 		sed 's/^a //' |
+# 		grep -v -e '^\.$' > /tmp/cr.$$
+
+manifest="
+./Makefile
+./README.md
+./bin
+./bin/README.md
+./build
+./build/.mkfs-skip
+./build/apps
+./build/apps/README.md
+./build/earth
+./build/earth/README.md
+./build/grass
+./build/grass/README.md
+./build/lib
+./build/lib/README.md
+./build/tools
+./build/tools/README.md
+./build/tools/cpr
+./docs
+./docs/overview
+./docs/overview/egos-overview.pdf
+./docs/overview/paper.tex
+./etc
+./etc/passwd
+./lib
+./lib/README.md
+./src
+./src/apps
+./src/apps/README.md
+./src/apps/ar.c
+./src/apps/bfs.c
+./src/apps/blocksvr.c
+./src/apps/car.c
+./src/apps/cat.c
+./src/apps/cc.c
+./src/apps/chmod.c
+./src/apps/cp.c
+./src/apps/dirsvr.c
+./src/apps/echo.c
+./src/apps/ed.c
+./src/apps/elf_cvt.c
+./src/apps/init.c
+./src/apps/kill.c
+./src/apps/login.c
+./src/apps/loop.c
+./src/apps/ls.c
+./src/apps/macho_cvt.c
+./src/apps/mkdir.c
+./src/apps/mkfs.c
+./src/apps/mount.c
+./src/apps/mt.c
+./src/apps/passwd.c
+./src/apps/pull.c
+./src/apps/push.c
+./src/apps/pwd.c
+./src/apps/pwdsvr.c
+./src/apps/rm.c
+./src/apps/shell.c
+./src/apps/shutdown.c
+./src/apps/sync.c
+./src/apps/syncsvr.c
+./src/apps/tcc.c
+./src/block
+./src/block/README.md
+./src/block/checkdisk.c
+./src/block/cipherdisk.c
+./src/block/clockdisk.c
+./src/block/combinedisk.c
+./src/block/debugdisk.c
+./src/block/fatdisk.c
+./src/block/fatdisk.h
+./src/block/filedisk.c
+./src/block/grass.h
+./src/block/mapdisk.c
+./src/block/partdisk.c
+./src/block/protdisk.c
+./src/block/raid0disk.c
+./src/block/raid1disk.c
+./src/block/raid4disk.c
+./src/block/ramdisk.c
+./src/block/statdisk.c
+./src/block/treedisk.c
+./src/block/treedisk.h
+./src/block/treedisk_chk.c
+./src/block/unixdisk.c
+./src/block/unixdisk.h
+./src/block/wtclockdisk.c
+./src/earth
+./src/earth/README.md
+./src/earth/clock.c
+./src/earth/devdisk.c
+./src/earth/devgate.c
+./src/earth/devtty.c
+./src/earth/devudp.c
+./src/earth/intf.c
+./src/earth/intr.c
+./src/earth/log.c
+./src/earth/myalloc.c
+./src/earth/queue.c
+./src/earth/tlb.c
+./src/grass
+./src/grass/README.md
+./src/grass/disksvr.c
+./src/grass/gatesvr.c
+./src/grass/kcrt0.c
+./src/grass/main.c
+./src/grass/process.c
+./src/grass/process.h
+./src/grass/procsys.c
+./src/grass/ramfilesvr.c
+./src/grass/spawnsvr.c
+./src/grass/ttysvr.c
+./src/h
+./src/h/earth
+./src/h/earth/clock.h
+./src/h/earth/devdisk.h
+./src/h/earth/devgate.h
+./src/h/earth/devtty.h
+./src/h/earth/devudp.h
+./src/h/earth/earth.h
+./src/h/earth/intf.h
+./src/h/earth/intr.h
+./src/h/earth/log.h
+./src/h/earth/tlb.h
+./src/h/egos
+./src/h/egos/block.h
+./src/h/egos/block_store.h
+./src/h/egos/context.h
+./src/h/egos/dir.h
+./src/h/egos/ema.h
+./src/h/egos/exec.h
+./src/h/egos/file.h
+./src/h/egos/gate.h
+./src/h/egos/malloc.h
+./src/h/egos/map.h
+./src/h/egos/memchan.h
+./src/h/egos/print.h
+./src/h/egos/pwdsvr.h
+./src/h/egos/queue.h
+./src/h/egos/sha256.h
+./src/h/egos/spawn.h
+./src/h/egos/syscall.h
+./src/include
+./src/include/assert.h
+./src/include/ctype.h
+./src/include/elf.h
+./src/include/fcntl.h
+./src/include/getopt.h
+./src/include/inttypes.h
+./src/include/libgen.h
+./src/include/math.h
+./src/include/setjmp.h
+./src/include/signal.h
+./src/include/stdbool.h
+./src/include/stdint.h
+./src/include/stdio.h
+./src/include/stdlib.h
+./src/include/string.h
+./src/include/sys
+./src/include/sys/errno.h
+./src/include/sys/stat.h
+./src/include/sys/time.h
+./src/include/sys/types.h
+./src/include/time.h
+./src/include/unistd.h
+./src/include/utime.h
+./src/lib
+./src/lib/README.md
+./src/lib/asm_egos2000_riscv_32.s
+./src/lib/asm_linux_x86_32.s
+./src/lib/asm_linux_x86_64.s
+./src/lib/asm_macosx_arm64.s
+./src/lib/asm_macosx_x86_64.s
+./src/lib/block.c
+./src/lib/crt0.c
+./src/lib/ctype.c
+./src/lib/dir.c
+./src/lib/ema.c
+./src/lib/end.c
+./src/lib/errno.c
+./src/lib/exec.c
+./src/lib/file.c
+./src/lib/gate.c
+./src/lib/getopt.c
+./src/lib/libgen.c
+./src/lib/malloc.c
+./src/lib/map.c
+./src/lib/math.c
+./src/lib/memchan.c
+./src/lib/print.c
+./src/lib/qsort.c
+./src/lib/queue.c
+./src/lib/scanf.c
+./src/lib/setjmp.c
+./src/lib/sha256.c
+./src/lib/spawn.c
+./src/lib/stdio.c
+./src/lib/stdlib.c
+./src/lib/string.c
+./src/lib/syscall.c
+./src/lib/time.c
+./src/lib/tlsf.c
+./src/lib/tlsf.h
+./src/lib/unistd.c
+./src/make
+./src/make/Makefile.apps
+./src/make/Makefile.cache_test
+./src/make/Makefile.common
+./src/make/Makefile.earth
+./src/make/Makefile.fat_test
+./src/make/Makefile.grass
+./src/make/Makefile.linux-x86_64-gcc
+./src/make/Makefile.linux-x86_64-tcc
+./src/make/Makefile.linux32
+./src/make/Makefile.linux64-x86_64-gcc
+./src/make/Makefile.macos-arm64
+./src/make/Makefile.macos-x86_64
+./src/make/sname
+./src/tools
+./src/tools/README.md
+./src/tools/cpr.c
+./src/tools/cr
+./src/tools/kernel64.ld
+./src/tools/process32.ld
+./src/tools/process64.ld
+./storage
+./storage/.mkfs-skip
+./tcc
+./tcc/crt0.o
+./tcc/end.o
+./tcc/include
+./tcc/include/stdarg.h
+./tcc/libgrass.a
+./tcc/libtcc1.a
+./tcc/tcc.exe
+./tcc_readme.txt
+./test
+./test/raid_test
+./test/raid_test/Makefile
+./test/raid_test/block_store.h
+./test/raid_test/checkdisk.c
+./test/raid_test/main.c
+./test/raid_test/ramdisk.c
+./test/tiny_test
+./test/tiny_test/Makefile
+./test/tiny_test/checkdisk.c
+./test/tiny_test/egos
+./test/tiny_test/egos/block_store.h
+./test/tiny_test/main.c
+./test/tiny_test/ramdisk.c
+./usr/guest
+./usr/guest/.mkfs-uid
+./usr/guest/script.bat
+./usr/rvr
+./usr/rvr/.mkfs-uid
+./usr/rvr/make.bat
+./usr/rvr/test.c
+./usr/yunhao
+./usr/yunhao/.mkfs-uid
+"
+
+: first create all directories
+# for f in `cat /tmp/cr.$$`
+for f in $manifest
+do
+	if test -d $f
+	then
+		mkdir -p releases/$name/$f
+	fi
+done
+
+: then copy over all files
+# for f in `cat /tmp/cr.$$`
+for f in $manifest
+do
+	if test -f $f
+	then
+		case $f in
+		*.[chs])
+			build/tools/cpr $f releases/$name/$f $*
+			;;
+		*.cache_test)
+			build/tools/cpr $f releases/$name/$f $*
+			;;
+		*)
+			cp $f releases/$name/$f
+		esac
+	fi
+done
+
+# rm -f /tmp/cr.$$

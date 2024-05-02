@@ -1,0 +1,16 @@
+cpu=`uname -m`
+case `uname -s` in
+Linux)
+	if test -f build/tcc/bin/tcc
+	then
+		echo linux64-$cpu-tcc
+	else
+		echo linux64-$cpu-gcc
+	fi
+	;;
+Darwin)
+	echo macos-$cpu
+	;;
+*)
+	echo unknown
+esac

@@ -1,0 +1,8 @@
+XFLAGS = -DMACOSX -D__arm64__ -Darm64 $(SANFLAGS) -Wc++-compat -MMD -MP -fno-stack-protector -fno-stack-check
+ASM_SRCS = asm_macosx_arm64.s
+CONVERT = macho_cvt
+KLD = ld -execute -static -preload -segaddr __TEXT a000000000 -e __start
+KLIB =
+
+build/apps/%.int: build/apps/%.o lib/crt0.o lib/libgrass.a lib/end.o 
+	ld -execute -static -preload -segaddr __TEXT 9000000000 -e __start -o $@ lib/crt0.o $< lib/libgrass.a lib/end.o 
